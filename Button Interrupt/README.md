@@ -1,30 +1,106 @@
-# Button Interrupt
-Last lab you were introduced to the idea of "Polling" where in you would constantly check the status of the P1IN register to see if something has changed. While your code may have worked, it ends up spending a ton of time just checking something that has not changed. What we can do instead is use another two registers available to us from the GPIO peripheral, P1IE and P1IES, to allow our processor to just chill out and wait until something happens to act upon it. Without spending too much space on this README with explanations, what makes these interrupts tick is the following code:
+# Button Blink
+Implemented on the following processors:
+1. MSP430G2553
+2. MSP430F5529
+3. MSP430FR2311
+4. MSP430FR5994
+5. MSP430FR6989
 
-'''c
+
+## Overall structure of code
+The following list gives an idea of the overall structure of the code used to implement Button Blink using interrupts.
+
+1. Stop WatchDog Timer
+2. Initialise Registers (1 button, 1 LED, enable interrupts for button)
+3. Blink LED at some initial default rate
+4. When button is pressed, increase the rate of blink
+5. Once rate of blink has reached maximum, reset back to a slow speed.
+
+### Required Materials
+In order to implement each of these pieces of software, you will require 3 things:
+
+1. Physical MicroController with appropriate USB connector cable, or some equivalent emulator software
+2. Code Composer Studio(CCS), or program to flash code to the MCU.
+3. Main.c file for corresponding processor
+4. Header file for corresponding processor (CCS has them built in, or they can be found online) 
+5. 8 LED's, 8 1k resistors, breadboard jumper wires
+
+### Implementing this code on your Processor
+Each of the main.c files found in the folders can be implemented directly on the processors denoted by the folder name.
+The main differences lie in the specific processor dependent implementations. Each processor has its own pre-defined
+registers, which would need to be changed based on the specific processor used. For example, Pin 1.0 is the red LED on the MSP430G2553,
+while the same pin on the MSP430F5529 is not even accessible.
+
+### Key differences
+We have 5 different implementations of the same code, for 5 different processors. The code for all 5 is nearly identical,
+and for some processors, is even 100% identical. However, one important aspect to understand is that the 2311, 5994, and 
+6989 processors all require an additional piece of code in order to function, else nothing will happen. For these boards,
+we need to disable the pin high-impedance mode, which is enabled by default in these boards. This high-impedance mode
+essentially forces all registers regarding pins to be set to their default values, and blocks the ability to change the pins.
+As a result, we need to run the line, PM5CTL0 &= ~LOCKLPM5 in order to actually implement our code.
+
+#### Interrupts
+A key idea introduced here is interrupts. An interrupt is essentially a (sometimes) random suspension of the code currently
+being executed, in order to execute some other code. Generally, the new code that is to be run is known as an 
+Interrupt Service Routine(ISR) or Interrupt Handler. The basic chain of events that occurs when an interrupt occurs can
+be seen in the following image:
+
+The main program will be executed, and when an interrupt is detected (an interrupt flag is changed),
+ we will execute some other code. Once that othercode is finished being executed, we will go right back to the 
+ main program (as the state of the program is saved when we begin to handle the interrupt).
+
+##### This Button based interrupt
+Each interrupt has its own interrupt flag associated with it. When an interrupt is detected, the respective interrupt flag
+will change. For the button based interrupt, we must re-clear the flag once we are finished handling the interrupt,
+else the interrupt will not be able to be triggered again. Overall, writing an interrupt handler is fairly straightforward.
+We write out function in the following manner:
+
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
-{
-}
-'''
 
-While you still need to initialize the Ports to be interrupt enabled and clear the flags, this "Pragma Vector" tells the compiler that when a particular interrupt occurs, run this code. 
+The pragma vector tells the processor that the following function should be treated as an interrupt routine. Each type of 
+interrupt vector has a pre-defined name, (such as PORT1_VECTOR) which we can locate in the datasheet.
 
-## A word of caution...
-While you might be willing to just jump straight in and begin using example code you may find, I would seriously take a few minutes and find a few good videos or tutorials to help understand exactly what is happening in the processor. I implore you to do this since you will inevitably have issues in the future which are solved by not understanding how the processor processes interrupts. A prime example is when I once tried implementing UART and I did not realize that you had to clear a flag or else my code would get stuck in an infinite loop. Hours of my life are now gone thanks to me at the time not understanding how interrupts worked with the peripherals I was utilizing. A few resources I have used in the past include:
-* https://youtu.be/GR8S2XT47eI?t=1334
-* http://processors.wiki.ti.com/index.php/MSP430_LaunchPad_Interrupt_vs_Polling
-* http://www.simplyembedded.org/tutorials/msp430-interrupts/
+When the button is pressed, a delay variable is incremented. This delay will change the rate at which the LED will blink.
+Once a certain delay value is reached, the delay will reset back to 0. 
 
-## Task
-Your goal for this part of the lab is to replicate your button code from Lab 2, where the LED should change states only when the button is pressed. This can be extended to include behaviors such as only have the LED on when the button is depressed, or have the LED blink one color when pressed and another when it is let go. Another behavior extends from the second lab which is speed control based on the button presses. For example, have the rate of the LED cycle between a "low", "Medium", and "High" rate of speed.
+#### Button
+At this point, we are begginning to use the buttons that are available on the MSP's. All of the boards have varying
+numbers of buttons, each of which are accessed in essentially the same way. In order to access the buttons,
+we need to take these 3 actions (order is irrelevant)
+* Initialise the button to high
+* Set the Button to output
+* Enable the pull up resistor for the button
 
-## Extra Work 
-### Binary Counter/Shift Register
-Either use a function generator, another processor, or a button to control your microcontroller as an 8-bit binary counter using 8 LEDs to indicate the current status of the counter.
+There are two key differences in accessing buttons that we must look at:
+1. Initialising the Button to high
+2. Enabling the pull up resistor on the button
 
-### Multiple Buttons
-Come up with a behavior of your own that incorporates needing to use two buttons or more and these two buttons must be implemented using interrupts.
+In order to understand why we need to do both of these things, we can look at the image below:
 
-### (Recommended) Energy Trace
-Using the built in EnergyTrace(R) software in CCS and the corresponding supporting hardware on the MSP430 development platforms, analyze the power consumption between the button based blink code you wrote last week versus this week. What can you do to decrease the amount of power used within the microcontroller in this code? Take a look at the MSP430FR5994 and the built in SuperCap and see how long your previous code and the new code lasts. For a quick intro to EnergyTrace(R), take a look at this video: https://youtu.be/HqeDthLrcsg
+![alt text](https://imgur.com/a/gudhj "Circuit Diagram detailing why we need a pull-up resistor")
+
+The button is naturally high, as can be seen in the preceeding image. When the switch is open, the voltage on the pin
+is Vcc. But when the button is pressed (switch is closed) the voltage on the pin essentially becomes 0, as all of the current will
+flow down to ground. Since the button is high when it is not pressed, we must initialise it to a high value.
+
+The pull-up resistor is placed so that high amounts of current do not flow from Vcc to the MCU. If this were to happen, 
+our MCU would not have a very good day.
+
+An 8-bit binary counter is implemented using 8 of the GPIO pins. Upon button press, 
+### Advanced Work - Binary Counter
+An 8-bit binary counter is implemented using the MSP430G2553. The code is included in the MSP430G2553 folder, as main_Adv.c.
+This counter works by using breadboard jumper cables to connect the signal output by the GPIO pins to the LED's.
+A picture of this set up is included below:
+
+
+The counter works fairly well, being able to count up to 255, and resetting once we go past 255.
+
+#### Known bugs
+The only known bugs in both the binary counter and the regular button based interrupt, is that lack of debouncing. Sometimes,
+when pressing the button, the counter will increment twice, or the LED will flicker (having been turned on, and off in the time
+that it took for the button signal to stabilise. An example of  of this can be seen below:
+
+
+
+
