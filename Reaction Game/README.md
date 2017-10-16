@@ -1,15 +1,25 @@
-# (Optional) Reaction Game
-On to the sort of optional part of the lab. I only say "sort of" because I really think that you should try to implement a game just to not only have a little fun with the class, but also start thinking about what behaviors you want your system to exhibit. Below are only a few recommendations I can think of, but if you want, please show me your creative side and think of another game to implement.
-
-## Task
-The final part of this lab is to generate a game using buttons, timers, and LEDS that is meant to be played with let's say 2+ players. Your game does not have to be complicated, however, I think it would be kind of cool as people start making these games that we can test them out in lab. Along with some awesome documentation to explain how to play your game, you need to also demonstrate to your Professor and/or the Lab Instructor that your game actually works to get credit for this part of the lab. The reason we want to see it in person is A) so we can bask in the glory that is your game, and B) so we can get a good look at the game and see what you have implemented from the lab exercises so far. This is not meant to be a "Grill session" where we rake you over the coals about every single line of code, but we are probably going to ask a few questions just to get an idea for the different ways people are implementing these game ideas.
-
-## "But what processor should I be doing this on?"
-Since this is technically an optional part of the lab, we are not going to force you into picking just one processor or make you do it for them all. What I personally would love to see is people using boards like the FR6989 or F5529 and take advantage of a ton of I/O to maybe do something interesting with LED displays or multiple inputs.
-
-### Game Ideas
-#### Reaction
-This would be a 2 player game where your two players after resetting the processor press their buttons to initialize the game. After at least 5 seconds, one of the LEDs should turn on and your processor then has to determine who was the first person to press the button. The winner could be indicated by blinking particular LEDs. Once you get the core functionality working, you should also add false start protection so players who press the button too early are automatically disqualified.
-
-#### Rapid Pressing
-The object of this 2 player game would be to see who can press their button the fastest up to an arbitrary number of times, for example 50 times. Upon your processor starting up, each player should hold their button down to indicate the start of the game. From that point the LEDs could blink 3 times and after that, both players begin pressing the buttons as fast as possible. First player to the number of button presses wins and can be indicated by flashing LEDs. Remember! Since you are counting the number of times a button is pressed, you need to make sure that you are debouncing properly to ensure there is no inadvertent cheating.
+# Reaction Game
+## Implemenation
+This game is implemented on the MSP430FR6989 development board. I make use of both buttons, and both LED's,
+as well as implement false-start protection. To implement this on your own device, you simply take my main.c file, and
+put it into your project, and then make sure that the appropraite processor is chosen.
+### How it works
+The game implements various timers and button interrupts in order to function effectively. When first launching the game,
+the processor will be in a low power state. To start the game, we press both buttons. Once this is done,
+the LED's will both shine for a moment, before turning off. At this point, the game can be considered started. After a
+"random" amount of time, both LED's will turn back on. The first person to hit their button is the winner. The winner 
+is indicated by having the LED on his/her side blink rapidly. If you are to hit the button before the LED's turn back on,
+the LED of the opponent will blink rapidly, indicating that they are the winners.
+#### "Random time"
+Initially, I attempted to find some kind of random number generator library on the internet. However, I eventually
+decided against this, as I was not sure how many unwanted functions I would have to load onto my processor,
+just for the ability to get a random number. Instead, I decided to implement something sneaky. I have a separate timer
+module running in the background, incrementing a "randomNumber" variable. This incrementation is disabled, once the game 
+is ready. Once both players have pressed their button, I will then use the randomNumber variable to generate a random delay.
+I do this by performing the modulo operation on it with the value 24576, ensuring that I have a bound of 24576.
+I then add 12000 to the value from the modulo, and that will become my CCR register to count up to, after which the LED's
+will turn on, and the players will have to hit their buttons.
+### Why this board
+I chose this board because it offered me everything I wanted, 2 buttons, plenty of playing space, and good real estate
+for a real 1 on 1 feel. The buttons are next to each other, as are the LED's, so I felt this board was the best for the
+type of game that I was implementing.

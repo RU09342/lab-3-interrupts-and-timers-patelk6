@@ -101,14 +101,6 @@ flow down to ground. Since the button is high when it is not pressed, we must in
 The pull-up resistor is placed so that high amounts of current do not flow from Vcc to the MCU. If this were to happen, 
 our MCU would not have a very good day.
 
-An 8-bit binary counter is implemented using 8 of the GPIO pins. Upon button press, 
-### Advanced Work - Binary Counter
-An 8-bit binary counter is implemented using the MSP430G2553. The code is included in the MSP430G2553 folder, as main_Adv.c.
-This counter works by using breadboard jumper cables to connect the signal output by the GPIO pins to the LED's.
-A picture of this set up is included below:
-
-
-The counter works fairly well, being able to count up to 255, and resetting once we go past 255.
 
 #### Known bugs
 The only known bugs in both the binary counter and the regular button based interrupt, is that lack of debouncing. Sometimes,

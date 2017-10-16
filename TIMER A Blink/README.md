@@ -64,57 +64,13 @@ The main program will be executed, and when an interrupt is detected (an interru
  we will execute some other code. Once that othercode is finished being executed, we will go right back to the 
  main program (as the state of the program is saved when we begin to handle the interrupt).
 
-##### This Button based interrupt
-Each interrupt has its own interrupt flag associated with it. When an interrupt is detected, the respective interrupt flag
-will change. For the button based interrupt, we must re-clear the flag once we are finished handling the interrupt,
-else the interrupt will not be able to be triggered again. Overall, writing an interrupt handler is fairly straightforward.
-We write out function in the following manner:
-
-#pragma vector=PORT1_VECTOR
-__interrupt void Port_1(void)
-
-The pragma vector tells the processor that the following function should be treated as an interrupt routine. Each type of 
-interrupt vector has a pre-defined name, (such as PORT1_VECTOR) which we can locate in the datasheet.
-
-When the button is pressed, a delay variable is incremented. This delay will change the rate at which the LED will blink.
-Once a certain delay value is reached, the delay will reset back to 0. 
-
-#### Button
-At this point, we are begginning to use the buttons that are available on the MSP's. All of the boards have varying
-numbers of buttons, each of which are accessed in essentially the same way. In order to access the buttons,
-we need to take these 3 actions (order is irrelevant)
-* Initialise the button to high
-* Set the Button to output
-* Enable the pull up resistor for the button
-
-There are two key differences in accessing buttons that we must look at:
-1. Initialising the Button to high
-2. Enabling the pull up resistor on the button
-
-In order to understand why we need to do both of these things, we can look at the image below:
-
-![alt text](https://imgur.com/a/gudhj "Circuit Diagram detailing why we need a pull-up resistor")
-
-The button is naturally high, as can be seen in the preceeding image. When the switch is open, the voltage on the pin
-is Vcc. But when the button is pressed (switch is closed) the voltage on the pin essentially becomes 0, as all of the current will
-flow down to ground. Since the button is high when it is not pressed, we must initialise it to a high value.
-
-The pull-up resistor is placed so that high amounts of current do not flow from Vcc to the MCU. If this were to happen, 
-our MCU would not have a very good day.
-
-An 8-bit binary counter is implemented using 8 of the GPIO pins. Upon button press, 
-### Advanced Work - Binary Counter
-An 8-bit binary counter is implemented using the MSP430G2553. The code is included in the MSP430G2553 folder, as main_Adv.c.
-This counter works by using breadboard jumper cables to connect the signal output by the GPIO pins to the LED's.
-A picture of this set up is included below:
-
-
-The counter works fairly well, being able to count up to 255, and resetting once we go past 255.
+##### Timer Based Interrupt
+In order to blink the LED in this case, we use the timer modules. In order to do so, we initialise the varius Control
+registers for the timers. We set the frequency of the clock, counting mode, predividers, interruptability, and the value
+to which we will be counting(essentially determining the blink rate of the LED).
 
 #### Known bugs
-The only known bugs in both the binary counter and the regular button based interrupt, is that lack of debouncing. Sometimes,
-when pressing the button, the counter will increment twice, or the LED will flicker (having been turned on, and off in the time
-that it took for the button signal to stabilise. An example of  of this can be seen below:
+There are no known bugs. This is a fairly easily implemented piece of software.
 
 
 
