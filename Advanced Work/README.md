@@ -8,4 +8,4 @@ of the current count, and reset the values of the pins once I hit 255, because I
 when the register overflowed.
 ### Implementation
 Implemenation of this binary counter is simple. Simple take the main.c file, make sure your project is linked to the
-MSP430FR6989 board, and set up the circuit for the LED's
+MSP430FR6989 board, and set up the circuit for the LED's. Then just hit the button to count up.
